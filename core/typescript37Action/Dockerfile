@@ -43,6 +43,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY bin/compile /bin/compile
 COPY lib/launcher.ts /lib/launcher.ts
+COPY nim.js /
 COPY package.json /
 
 # Customize runtime with additional packages.
@@ -53,6 +54,9 @@ RUN cd / && npm install -g \
   && npm install --no-package-lock --production @types/node@13.13.5 \
   && npm install --no-package-lock --production \
   && npm cache clean --force
+
+# move nim sdk to node modules directory so that it can be found by node module loader
+RUN mkdir /node_modules/nim && mv /nim.js /node_modules/nim/index.js
 
 EXPOSE 8080
 

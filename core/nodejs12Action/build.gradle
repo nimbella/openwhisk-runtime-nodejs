@@ -49,6 +49,12 @@ task copyProxy(type: Copy) {
 task copyRunner(type: Copy) {
     from '../nodejsActionBase/runner.js'
     into '.'
+
+    from '../nodejsActionBase/lambda.js'
+    into '.'
+
+    from '../nodejsActionBase/nim.js'
+    into '.'
 }
 
 task copyService(type: Copy) {
@@ -79,6 +85,8 @@ task copyBuildTemplate(type: Copy) {
 task cleanup(type: Delete) {
     delete 'package.json'
     delete 'app.js'
+    delete 'lambda.js'
+    delete 'nim.js'
     delete 'runner.js'
     delete 'src'
     delete 'platform'
