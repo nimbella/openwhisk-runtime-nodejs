@@ -20,6 +20,7 @@ var config = {
     'port': 8080,
     'apiHost': process.env.__OW_API_HOST,
     'allowConcurrent': process.env.__OW_ALLOW_CONCURRENT,
+    'lambdaCompat': process.env.__LAMBDA_COMPAT,
     'requestBodyLimit': "48mb"
 };
 
