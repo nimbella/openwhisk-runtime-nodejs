@@ -16,6 +16,12 @@
  */
 
 const { initializeActionHandler, NodeActionRunner } = require('../runner');
+const NodeActionLambdaRunner = (() => {
+  try {
+      let lambda = require('../lambda');
+      return lambda;
+  } catch (e) {}
+})();
 
 function NodeActionService(config) {
 
@@ -27,6 +33,7 @@ function NodeActionService(config) {
     };
 
     const ignoreRunStatus = config.allowConcurrent === undefined ? false : config.allowConcurrent.toLowerCase() === 'true';
+    const lambdaCompat = config.lambdaCompat === undefined ? false : config.lambdaCompat.toLowerCase() === 'true' && NodeActionLambdaRunner !== undefined;
 
     let status = Status.ready;
     let server = undefined;
@@ -173,7 +180,7 @@ function NodeActionService(config) {
 
         return initializeActionHandler(message)
             .then(handler => {
-                userCodeRunner = new NodeActionRunner(handler);
+                userCodeRunner = lambdaCompat === false ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
             })
             // emit error to activation log then flush the logs as this is the end of the activation
             .catch(error => {
