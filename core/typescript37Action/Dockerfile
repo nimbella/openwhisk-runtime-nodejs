@@ -17,8 +17,8 @@
 
 # build go proxy from source
 FROM golang:1.15 AS builder_source
-ARG GO_PROXY_GITHUB_USER=apache
-ARG GO_PROXY_GITHUB_BRANCH=master
+ARG GO_PROXY_GITHUB_USER=nimbella-corp
+ARG GO_PROXY_GITHUB_BRANCH=dev
 RUN git clone --branch ${GO_PROXY_GITHUB_BRANCH} \
    https://github.com/${GO_PROXY_GITHUB_USER}/openwhisk-runtime-go /src ;\
    cd /src ; env GO111MODULE=on CGO_ENABLED=0 go build main/proxy.go && \
@@ -36,7 +36,7 @@ RUN curl -sL \
 FROM node:12.1.0-stretch
 
 # select the builder to use
-ARG GO_PROXY_BUILD_FROM=release
+ARG GO_PROXY_BUILD_FROM=source
 
 ENV TYPESCRIPT_VERSION=3.7.4
 ENV OW_COMPILER=/bin/compile
