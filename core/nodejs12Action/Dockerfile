@@ -46,4 +46,4 @@ ENV __LAMBDA_COMPAT=$__LAMBDA_COMPAT
 
 EXPOSE 8080
 
-CMD node --expose-gc app.js
+CMD node --expose-gc /nodejsAction/app.js

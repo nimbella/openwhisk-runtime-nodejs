@@ -55,4 +55,4 @@ EXPOSE 8080
 
 # The flag --experimental-worker enables worker threads,
 # see https://nodejs.org/docs/latest-v10.x/api/worker_threads.html
-CMD node --experimental-worker --expose-gc app.js
+CMD node --experimental-worker --expose-gc /nodejsAction/app.js
