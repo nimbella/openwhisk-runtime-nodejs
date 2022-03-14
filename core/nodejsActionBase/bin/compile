@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+from __future__ import print_function
+import os
+import sys
+import codecs
+
+def sources(launcher, source_dir, main):
+    # We're dealing with a zipped action if there's more than one file after unzipping
+    # or if we have just one but that isn't exec.
+    num_files = len([name for name in os.listdir(source_dir) if os.path.isfile("%s/%s" % (source_dir, name))])
+    if num_files == 1 and os.path.isfile("%s/exec" % source_dir):
+        main_file = "main"
+        main_func = main
+
+        # If we only upload a single file, it'll be called 'exec' which we need the launcher
+        # script to be.
+        src = "%s/exec" % source_dir
+        dst = "%s/main.js" % source_dir
+        body = ""
+        with codecs.open(src, 'r', 'utf-8') as s:
+            body = s.read()
+        with codecs.open(dst, 'w', 'utf-8') as d:
+            func = '''module.exports.%(main)s = (function(){
+    %(code)s
+    try {
+        return %(main)s
+    } catch (e) {
+        if (e.name === 'ReferenceError') {
+        return module.exports.%(main)s || exports.%(main)s
+        } else throw e
+    }
+})()''' % {"code": body, "main": main}
+            d.write(func)
+    else:
+        # main can be either
+        #  file.func
+        #  func
+        #
+        # If only 1 part is defined, Node.js will infer the file to either be index.js or
+        # part of package.json.
+        parts = main.split(".", 1)
+        if len(parts) == 1:
+            if not os.path.isfile("%s/index.js" % source_dir) and not os.path.isfile("%s/package.json"):
+                print("Zipped actions must contain either package.json or index.js at the root.")
+                sys.exit(1)
+
+            main_file = ""
+            main_func = parts[0]
+        else:
+            main_file = parts[0]
+            main_func = parts[1]
+
+    # Write the launcher file to the current source dir
+    launcher_file = "%s/exec__.js" % source_dir
+    with codecs.open(launcher_file, 'w', 'utf-8') as d:
+        with codecs.open(launcher, 'r', 'utf-8') as s:
+            body = s.read()
+            body = body.replace('require("./##MAIN_FILE##").##MAIN_FUNC##', 'require("./%s").%s' % (main_file, main_func))
+            d.write(body)
+
+def build(source_dir, target_file):
+    with codecs.open(target_file, 'w', 'utf-8') as d:
+        d.write("""#!/bin/bash
+cd %s
+exec node exec__.js
+""" % source_dir)
+    os.chmod(target_file, 0o755)
+
+def main(argv):
+    if len(argv) < 4:
+        print("usage: <main-function> <source-dir> <target-dir>")
+        sys.exit(1)
+
+    main = argv[1]
+    source_dir = os.path.abspath(argv[2])
+    target_file = os.path.abspath("%s/exec" % argv[3])
+    launcher = "/nodejsAction/launcher.js"
+    sources(launcher, source_dir, main)
+    build(source_dir, target_file)
+
+if __name__ == '__main__':
+    main(sys.argv)
