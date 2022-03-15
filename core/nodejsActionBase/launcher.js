@@ -52,9 +52,6 @@ try {
   }
   actionLoop()
 } catch (e) {
-  if (e.code == "MODULE_NOT_FOUND") {
-    console.log("Zipped actions must contain either package.json or index.js at the root.")
-  }
   console.log(e)
   process.exit(1)
 }
