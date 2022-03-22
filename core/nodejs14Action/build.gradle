@@ -27,22 +27,12 @@ ext.dockerImageName = 'action-nodejs-v14'
 apply from: '../../gradle/docker.gradle'
 
 distDocker.dependsOn 'copyPackageJson'
-distDocker.dependsOn 'copyProxy'
 distDocker.dependsOn 'copyRunner'
-distDocker.dependsOn 'copyService'
-distDocker.dependsOn 'copyPlatform'
-distDocker.dependsOn 'copyOpenWhisk'
-distDocker.dependsOn 'copyKnative'
-distDocker.dependsOn 'copyBuildTemplate'
+distDocker.dependsOn 'copyCompile'
 distDocker.finalizedBy('cleanup')
 
 task copyPackageJson(type: Copy) {
     from '../nodejsActionBase/package.json'
-    into '.'
-}
-
-task copyProxy(type: Copy) {
-    from '../nodejsActionBase/app.js'
     into '.'
 }
 
@@ -55,40 +45,22 @@ task copyRunner(type: Copy) {
 
     from '../nodejsActionBase/nim.js'
     into '.'
-}
 
-task copyService(type: Copy) {
-    from '../nodejsActionBase/src/service.js'
-    into './src'
-}
-
-task copyPlatform(type: Copy) {
-    from '../nodejsActionBase/platform/platform.js'
-    into './platform'
-}
-
-task copyOpenWhisk(type: Copy) {
-    from '../nodejsActionBase/platform/openwhisk.js'
-    into './platform'
-}
-
-task copyKnative(type: Copy) {
-    from '../nodejsActionBase/platform/knative.js'
-    into './platform'
-}
-
-task copyBuildTemplate(type: Copy) {
-    from '../nodejsActionBase/buildtemplate.yaml'
+    from '../nodejsActionBase/launcher.js'
     into '.'
+}
+
+task copyCompile(type: Copy) {
+    from '../nodejsActionBase/bin/compile'
+    into './bin'
 }
 
 task cleanup(type: Delete) {
     delete 'package.json'
-    delete 'app.js'
+    delete 'launcher.js'
     delete 'lambda.js'
     delete 'nim.js'
     delete 'runner.js'
     delete 'src'
-    delete 'platform'
-    delete 'buildtemplate.yaml'
+    delete 'bin'
 }
