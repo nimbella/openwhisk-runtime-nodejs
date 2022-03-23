@@ -18,6 +18,7 @@ results
 !/ansible/environments/mac
 
 # actionloop action compiler script
+!core/nodejsActionBase/bin/compile
 !core/typescript37Action/bin/compile
 
 # Eclipse

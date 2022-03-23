@@ -177,10 +177,6 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
       initCode should be(200)
 
       val (runCode, runRes) = c.run(runPayload(JsObject()))
-      // actionloop proxy does not return a different error code when there is an error,
-      // because it communicates only through json
-      if (!isTypeScript)
-        runCode should not be (200)
 
       runRes shouldBe defined
       runRes.get.fields.get("error") shouldBe defined
@@ -407,10 +403,7 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
 
       val (runCode, out) = c.run(runPayload(JsObject()))
 
-      if (isTypeScript)
-        out.get.fields should contain key ("error")
-      else
-        runCode should not be (200)
+      out.get.fields should contain key ("error")
 
     }
 
@@ -754,7 +747,6 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
 
     checkStreams(out, err, {
       case (o, e) =>
-        (o + e).toLowerCase should include regex ("error|exited")
         (o + e).toLowerCase should include("zipped actions must contain either package.json or index.js at the root.")
     })
   }
