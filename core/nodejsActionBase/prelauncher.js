@@ -46,12 +46,6 @@ try {
     return initializeActionHandler(message)
       .then(handler => {
         return lambdaCompat === false ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
-      })
-      // emit error to activation log then flush the logs as this is the end of the activation
-      .catch(error => {
-        console.error('Error during initialization:', error);
-        writeMarkers();
-        return Promise.reject(error);
       });
   }
 
