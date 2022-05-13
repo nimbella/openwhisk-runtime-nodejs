@@ -77,4 +77,6 @@ ENV OW_LOG_INIT_ERROR=1
 # the launcher must wait for an ack
 ENV OW_WAIT_FOR_ACK=1
 
+ENV OW_INIT_IN_ACTIONLOOP=/nodejsAction/prelauncher.js
+
 ENTRYPOINT [ "/bin/proxy" ]
