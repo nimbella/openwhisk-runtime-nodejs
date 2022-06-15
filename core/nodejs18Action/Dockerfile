@@ -51,10 +51,8 @@ COPY package.json /
 # Customize runtime with additional packages.
 # Install package globally so user packages can override.
 RUN cd / \
-  && npm install --no-package-lock --production \
-  && npm cache clean --force \
-  && mkdir /node_modules/nim \
-  && mv /nodejsAction/nim.js /node_modules/nim/index.js
+  && npm install --no-package-lock --omit=dev \
+  && npm cache clean --force
 
 ARG __OW_LAMBDA_COMPAT
 ENV __OW_LAMBDA_COMPAT=$__OW_LAMBDA_COMPAT
