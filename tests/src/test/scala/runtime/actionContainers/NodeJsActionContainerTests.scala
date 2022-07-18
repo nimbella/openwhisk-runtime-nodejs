@@ -747,7 +747,7 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
 
     checkStreams(out, err, {
       case (o, e) =>
-        (o + e).toLowerCase should include("zipped actions must contain either package.json or index.js at the root.")
+        (o + e).toLowerCase should include("zipped actions must contain either package.json or index.[m]js at the root.")
     })
   }
 
@@ -924,5 +924,129 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
       runRes.get.fields.get("error") shouldBe defined
       runRes.get.fields("error").toString.toLowerCase should include("error: app error")
     }
+  }
+
+  it should "have openwhisk package available through an ES module import" in {
+    val (out, err) = withNodeJsContainer { c =>
+      val code =
+        """
+          | import ow from 'openwhisk';
+          | export function main(args) {
+          |     return { "result": true };
+          | }
+        """.stripMargin
+
+      val (initCode, _) = c.init(initPayload(code))
+      initCode should be(200)
+
+      val (runCode, out) = c.run(runPayload(JsObject()))
+      runCode should be(200)
+    }
+  }
+
+  it should "support zip-encoded ES module actions without a package.json file" in {
+    val srcs = Seq(
+      Seq("index.mjs") ->
+        """
+          | export function main(args) {
+          |     var name = typeof args["name"] === "string" ? args["name"] : "stranger";
+          |
+          |     return {
+          |         greeting: "Hello " + name + ", from an ES module action without a package.json."
+          |     };
+          | }
+          | 
+        """.stripMargin)
+
+    val code = ZipBuilder.mkBase64Zip(srcs)
+
+    val (out, err) = withNodeJsContainer { c =>
+      c.init(initPayload(code))._1 should be(200)
+
+      val (runCode, runRes) = c.run(runPayload(JsObject()))
+
+      runCode should be(200)
+      runRes.get.fields.get("greeting") shouldBe Some(
+        JsString("Hello stranger, from an ES module action without a package.json."))
+    }
+  }
+
+  it should "support zip-encoded ES module with main from file other than index.mjs" in {
+    val srcs = Seq(
+      Seq("other.mjs") ->
+        """
+          | export function niam(args) {
+          |     var name = typeof args["name"] === "string" ? args["name"] : "stranger";
+          |
+          |     return {
+          |         greeting: "Hello " + name + ", from other.niam."
+          |     };
+          | }
+        """.stripMargin)
+
+    val code = ZipBuilder.mkBase64Zip(srcs)
+
+    val (out, err) = withNodeJsContainer { c =>
+      c.init(initPayload(code, "other.niam"))._1 should be(200)
+
+      val (runCode, runRes) = c.run(runPayload(JsObject()))
+      runCode should be(200)
+      runRes.get.fields.get("greeting") shouldBe Some(JsString("Hello stranger, from other.niam."))
+    }
+
+    checkStreams(out, err, {
+      case (o, e) =>
+        o shouldBe empty
+        e shouldBe empty
+    })
+  }
+
+  it should "support zip-encoded ES module with multiple js files, enabled through package.json" in {
+    val srcs = Seq(
+      Seq("package.json") ->
+        """
+          | {
+          |   "name": "wskaction",
+          |   "version": "1.0.0",
+          |   "description": "An OpenWhisk action as an npm package.",
+          |   "main": "foo.js",
+          |   "type": "module",
+          |   "author": "info@openwhisk.org",
+          |   "license": "Apache-2.0"
+          | }
+        """.stripMargin,
+      Seq("foo.js") ->
+        """
+          | import {hello} from './bar.js';
+          | export function main(args) {
+          |     var name = typeof args["name"] === "string" ? args["name"] : "stranger";
+          |
+          |     return {
+          |         greeting: hello(name)
+          |     };
+          | }
+        """.stripMargin,
+      Seq("bar.js") ->
+        """
+          | export function hello(name) {
+          |     return "Hello " + name + ", from module."
+          | }
+        """.stripMargin)
+
+    val code = ZipBuilder.mkBase64Zip(srcs)
+
+    val (out, err) = withNodeJsContainer { c =>
+      c.init(initPayload(code))._1 should be(200)
+
+      val (runCode, runRes) = c.run(runPayload(JsObject()))
+      runCode should be(200)
+      runRes.get.fields.get("greeting") shouldBe Some(JsString("Hello stranger, from module."))
+    }
+
+    checkStreams(out, err, {
+      case (o, e) =>
+        o shouldBe empty
+        e shouldBe empty
+    })
   }
 }
