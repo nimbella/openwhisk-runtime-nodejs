@@ -76,30 +76,29 @@ function initializeActionHandler(message) {
                 return handler.then(func => assertMainIsFunction(func, message.main))
             })
             .catch(error => Promise.reject(error));
-    } else try {
-        // Write file as ES modules need to be loaded from files.
-        fs.writeFileSync('index.mjs', message.code)
-        let handler = eval('import("' + process.cwd() + '/index.mjs").then(evaled => evaled.' + message.main + ')');
-        return handler
-            .then(func => assertMainIsFunction(func, message.main))
-            .catch(_ => {
-                // If loading from file didn't work, we're dealing with a legacy function with no
-                // defined exports. Use "the old way" of evaling it.
-                let handler = eval(
-                    `(function(){
-                        ${message.code}
-                        try {
-                            return ${message.main}
-                        } catch (e) {
-                            if (e.name === 'ReferenceError') {
-                                return module.exports.${message.main} || exports.${message.main}
-                            } else throw e
-                        }
-                    })()`);
-                    return assertMainIsFunction(handler, message.main);
-            });
-    } catch (e) {
-        return Promise.reject(e);
+    } else {
+        return new Promise((resolve) => {
+            // Throws on error and rejects the promise as a consequence.
+            let handler = eval(
+                `(function(){
+                    ${message.code}
+                    try {
+                        return ${message.main}
+                    } catch (e) {
+                        if (e.name === 'ReferenceError') {
+                            return module.exports.${message.main} || exports.${message.main}
+                        } else throw e
+                    }
+                })()`)
+            resolve(handler)
+        })
+        .then(func => assertMainIsFunction(func, message.main))
+        .catch(_ => {
+            // Write file as ES modules need to be loaded from files.
+            fs.writeFileSync('index.mjs', message.code)
+            return eval('import("' + process.cwd() + '/index.mjs").then(evaled => evaled.' + message.main + ')');
+        })
+        .then(func => assertMainIsFunction(func, message.main))
     }
 }
 
