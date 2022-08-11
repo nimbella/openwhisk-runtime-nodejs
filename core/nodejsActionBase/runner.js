@@ -42,31 +42,63 @@ function initializeActionHandler(message) {
                 // Set the executable directory to the project dir.
                 process.chdir(moduleDir);
 
-                if (index === undefined && !fs.existsSync('package.json') && !fs.existsSync('index.js')) {
-                    return Promise.reject('Zipped actions must contain either package.json or index.js at the root.');
+                const packageJsonExists = fs.existsSync('package.json')
+                const indexJSExists = fs.existsSync('index.js')
+                const indexMJSExists = fs.existsSync('index.mjs')
+                if (index === undefined && !packageJsonExists && !indexJSExists && !indexMJSExists) {
+                    return Promise.reject('Zipped actions must contain either package.json or index.[m]js at the root.');
+                }
+
+                let mainFile
+                if (index !== undefined) {
+                    // Backwards compat: We allow for main definitions like: `file.a.b.c`
+                    // where we'd import the function a.b.c from `file.[m]js`.
+                    if (fs.existsSync(index + '.js')) {
+                        mainFile = index + '.js'
+                    } else if (fs.existsSync(index + '.mjs')) {
+                        mainFile =  index + '.mjs'
+                    }
+                }
+                if (!mainFile && packageJsonExists) {
+                    // Infer the main file from package.json by default.
+                    let package = JSON.parse(fs.readFileSync('package.json'));
+                    mainFile = package.main
+                } 
+                if (!mainFile && indexMJSExists) {
+                    mainFile = 'index.mjs'
+                }
+                if (!mainFile) {
+                    mainFile = 'index.js'
                 }
 
                 //  The module to require.
-                let whatToRequire = index !== undefined ? path.join(moduleDir, index) : moduleDir;
-                let handler = eval('require("' + whatToRequire + '").' + main);
-                return assertMainIsFunction(handler, message.main);
+                let handler = eval('import("' + path.join(moduleDir, mainFile) + '").then(evaled => evaled.' + main + ')');
+                return handler.then(func => assertMainIsFunction(func, message.main))
             })
             .catch(error => Promise.reject(error));
-    } else try {
-        let handler = eval(
-          `(function(){
-               ${message.code}
-               try {
-                 return ${message.main}
-               } catch (e) {
-                 if (e.name === 'ReferenceError') {
-                    return module.exports.${message.main} || exports.${message.main}
-                 } else throw e
-               }
-           })()`);
-        return assertMainIsFunction(handler, message.main);
-    } catch (e) {
-        return Promise.reject(e);
+    } else {
+        return new Promise((resolve) => {
+            // Throws on error and rejects the promise as a consequence.
+            let handler = eval(
+                `(function(){
+                    ${message.code}
+                    try {
+                        return ${message.main}
+                    } catch (e) {
+                        if (e.name === 'ReferenceError') {
+                            return module.exports.${message.main} || exports.${message.main}
+                        } else throw e
+                    }
+                })()`)
+            resolve(handler)
+        })
+        .then(func => assertMainIsFunction(func, message.main))
+        .catch(_ => {
+            // Write file as ES modules need to be loaded from files.
+            fs.writeFileSync('index.mjs', message.code)
+            return eval('import("' + process.cwd() + '/index.mjs").then(evaled => evaled.' + message.main + ')');
+        })
+        .then(func => assertMainIsFunction(func, message.main))
     }
 }
 
