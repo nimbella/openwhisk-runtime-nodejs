@@ -36,6 +36,7 @@ RUN apt-get update \
     ca-certificates \
     # For the proxy.
     unzip \
+    python \
     # Dependencies for the users.
     graphicsmagick \
     imagemagick \
