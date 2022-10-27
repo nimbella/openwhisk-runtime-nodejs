@@ -55,6 +55,11 @@ RUN cd / \
   && npm install --no-package-lock --omit=dev \
   && npm cache clean --force
 
+# install doctl serverless (co-exist with nim temporarily)
+ARG DOCTL_DOWNLOAD=https://no-default.com
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN curl -L ${DOCTL_DOWNLOAD} | tar xzf - && mv doctl /usr/local/bin/doctl && doctl sls install
+
 ARG __OW_LAMBDA_COMPAT
 ENV __OW_LAMBDA_COMPAT=$__OW_LAMBDA_COMPAT
 
