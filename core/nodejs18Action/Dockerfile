@@ -37,6 +37,8 @@ RUN apt-get update \
     # For the proxy.
     unzip \
     python \
+    # For function-deployer install
+    curl \
     # Dependencies for the users.
     graphicsmagick \
     imagemagick \
@@ -54,6 +56,13 @@ COPY package.json /
 RUN cd / \
   && npm install --no-package-lock --omit=dev \
   && npm cache clean --force
+
+# install the functions-deployer (co-exist with nim temporarily)
+ARG DEPLOYER_DOWNLOAD
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN curl -L ${DEPLOYER_DOWNLOAD} | tar xzf - \
+  && rm -fr /usr/local/lib/dosls && mv dosls /usr/local/lib \
+  && rm -f /usr/local/bin/dosls && ln -s /usr/local/lib/dosls/bootstrap /usr/local/bin/dosls
 
 ARG __OW_LAMBDA_COMPAT
 ENV __OW_LAMBDA_COMPAT=$__OW_LAMBDA_COMPAT
