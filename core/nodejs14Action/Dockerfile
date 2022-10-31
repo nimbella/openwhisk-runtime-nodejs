@@ -47,18 +47,20 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Add sources and copy the package.json to root container,
+# Copy the package.json to root container,
 # so npm packages from user functions take precendence.
-#
 WORKDIR /nodejsAction
-ADD  . /nodejsAction/
 COPY package.json /
 
 # Customize runtime with additional packages.
 # Install package globally so user packages can override.
-#
-RUN cd / && npm install --no-package-lock --production \
-    && npm cache clean --force
+RUN cd / \
+  && npm install --no-package-lock --omit=dev \
+  && npm cache clean --force
+
+# Copy sources in after copying in package.json and running npm install to
+# enable faster builds after only sources change.
+COPY  . /nodejsAction/
 
 # move nim sdk to node modules directory so that it can be found by node module loader
 RUN mkdir /node_modules/nim && mv /nodejsAction/nim.js /node_modules/nim/index.js
