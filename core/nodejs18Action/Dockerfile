@@ -45,10 +45,9 @@ RUN apt-get update \
   && update-ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Add sources and copy the package.json to root container,
+# Copy the package.json to root container,
 # so npm packages from user functions take precendence.
 WORKDIR /nodejsAction
-COPY  . /nodejsAction/
 COPY package.json /
 
 # Customize runtime with additional packages.
@@ -56,6 +55,10 @@ COPY package.json /
 RUN cd / \
   && npm install --no-package-lock --omit=dev \
   && npm cache clean --force
+
+# Copy sources in after copying in package.json and running npm install to
+# enable faster builds after only sources change.
+COPY  . /nodejsAction/
 
 # install the functions-deployer (co-exist with nim temporarily)
 ARG DEPLOYER_DOWNLOAD
