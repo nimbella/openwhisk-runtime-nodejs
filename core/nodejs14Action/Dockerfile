@@ -62,10 +62,7 @@ RUN cd / \
 # enable faster builds after only sources change.
 COPY  . /nodejsAction/
 
-# move nim sdk to node modules directory so that it can be found by node module loader
-RUN mkdir /node_modules/nim && mv /nodejsAction/nim.js /node_modules/nim/index.js
-
-# install the functions-deployer (co-exist with nim temporarily)
+# install the functions-deployer
 ARG DEPLOYER_DOWNLOAD
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -L ${DEPLOYER_DOWNLOAD} | tar xzf - \

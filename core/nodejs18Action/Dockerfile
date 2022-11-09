@@ -60,7 +60,7 @@ RUN cd / \
 # enable faster builds after only sources change.
 COPY  . /nodejsAction/
 
-# install the functions-deployer (co-exist with nim temporarily)
+# install the functions-deployer
 ARG DEPLOYER_DOWNLOAD
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -L ${DEPLOYER_DOWNLOAD} | tar xzf - \
