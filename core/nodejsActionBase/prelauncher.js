@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+const isLambda = require('./mainFunctionDetection').isLambda;
+
 try {
   const readline = require('readline');
   const fs = require("fs")
@@ -29,8 +31,11 @@ try {
     } catch (e) {}
   })();
 
-  const lambdaCompat = process.env.__OW_LAMBDA_COMPAT === undefined ? false : process.env.__OW_LAMBDA_COMPAT.toLowerCase() === 'true' && NodeActionLambdaRunner !== undefined;
-
+  /**
+   * Initializes the user's function. Expected to be called with first line from ActionLoop input.
+   * @param {{ env: Object }} message
+   * @returns {NodeActionRunner | NodeActionLambdaRunner} The runner to use with the function.
+   */
   function doInit(message) {
     if (message.env && typeof message.env == 'object') {
       Object.keys(message.env).forEach(k => {
@@ -43,9 +48,13 @@ try {
       });
     }
 
+    // initializeActionHandler has the logic for determining whether the function was in a ZIP file or not and if so,
+    // unpacking it. It will only ever return the main function (aka handler).
     return initializeActionHandler(message)
       .then(handler => {
-        return lambdaCompat === false ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
+        // TODO: Based on studying the rest of the code, I feel like this is the best spot to put the Lambda detection.
+        //  Is it? I'm hoping putting it here means it works whether the function was in a ZIP or not. Will it?
+        return !isLambda(handler) ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
       });
   }
 
@@ -65,6 +74,8 @@ try {
 
         if (!initialized) {
           // The first value sent through is the actual init.
+          // TODO: this is probably the spot where we want to have the logic for figuring out which runner to use,
+          //  because a runner is returned.
           runner = await doInit(value)
           initialized = true
           out.write(JSON.stringify({ "ok": true }) + "\n");

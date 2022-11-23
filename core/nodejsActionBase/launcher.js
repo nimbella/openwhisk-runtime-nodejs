@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+const isLambda = require('./mainFunctionDetection').isLambda;
+
 try {
   const readline = require('readline');
   const fs = require("fs")
@@ -28,8 +30,12 @@ try {
   })();
 
   const lambdaCompat = process.env.__OW_LAMBDA_COMPAT === undefined ? false : process.env.__OW_LAMBDA_COMPAT.toLowerCase() === 'true' && NodeActionLambdaRunner !== undefined;
+
   const handler = eval('require("./##MAIN_FILE##").##MAIN_FUNC##') // Will be replaced in the compile script with the correct main.
-  const runner = lambdaCompat === false ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
+
+  // TODO: I'm assuming that the eval here will return the handler in the same way that the eval in prelauncher.js
+  //  returns a handler. Is that assumption correct?
+  const runner = !isLambda(handler) ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
 
   async function actionLoop() {
     const out = fs.createWriteStream(null,
