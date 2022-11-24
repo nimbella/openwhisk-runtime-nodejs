@@ -22,6 +22,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class NodeJs18ActionContainerTests extends NodeJsActionContainerTests {
-  override lazy val nodejsContainerImageName = "action-nodejs-v18"
+  override lazy val nodejsContainerImageName = "registry.digitalocean.com/my-instance/action-nodejs-v18"
+//  override lazy val nodejsContainerImageName = "action-nodejs-v18"
   override lazy val nodejsTestDockerImageName = "nodejs18docker"
 }

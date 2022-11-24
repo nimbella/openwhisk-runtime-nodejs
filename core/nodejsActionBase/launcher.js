@@ -33,8 +33,6 @@ try {
 
   const handler = eval('require("./##MAIN_FILE##").##MAIN_FUNC##') // Will be replaced in the compile script with the correct main.
 
-  // TODO: I'm assuming that the eval here will return the handler in the same way that the eval in prelauncher.js
-  //  returns a handler. Is that assumption correct?
   const runner = !isLambda(handler) ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
 
   async function actionLoop() {

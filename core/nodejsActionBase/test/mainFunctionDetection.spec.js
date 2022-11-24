@@ -3,10 +3,10 @@ const expect = require('expect').expect;
 const isLambda = require('../mainFunctionDetection').isLambda;
 
 describe('isLambda()', function () {
-    it('determines a function with two parameters to be Lambda', function () {
-        const fn = function(a, b) {};
+    it('determines a function with no parameters to not be Lambda', function () {
+        const fn = function() {};
 
-        expect(isLambda(fn)).toBe(true);
+        expect(isLambda(fn)).toBe(false);
     });
 
     it('determines a function with one parameter to not be Lambda', function () {
@@ -15,15 +15,15 @@ describe('isLambda()', function () {
         expect(isLambda(fn)).toBe(false);
     });
 
-    it('throws an error for a function with fewer than 1 parameters', function () {
-        const fn = function() {};
+    it('determines a function with two parameters to be Lambda', function () {
+        const fn = function(a, b) {};
 
-        expect(() => isLambda(fn)).toThrow();
+        expect(isLambda(fn)).toBe(true);
     });
 
-    it('throws an error for a function with more than 2 parameters', function () {
+    it('determines a function with three parameters to be Lambda', function () {
         const fn = function(a, b, c) {};
 
-        expect(() => isLambda(fn)).toThrow();
+        expect(isLambda(fn)).toBe(true);
     });
 });

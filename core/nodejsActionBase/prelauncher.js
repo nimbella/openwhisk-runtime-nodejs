@@ -52,8 +52,6 @@ try {
     // unpacking it. It will only ever return the main function (aka handler).
     return initializeActionHandler(message)
       .then(handler => {
-        // TODO: Based on studying the rest of the code, I feel like this is the best spot to put the Lambda detection.
-        //  Is it? I'm hoping putting it here means it works whether the function was in a ZIP or not. Will it?
         return !isLambda(handler) ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
       });
   }
@@ -74,8 +72,6 @@ try {
 
         if (!initialized) {
           // The first value sent through is the actual init.
-          // TODO: this is probably the spot where we want to have the logic for figuring out which runner to use,
-          //  because a runner is returned.
           runner = await doInit(value)
           initialized = true
           out.write(JSON.stringify({ "ok": true }) + "\n");
