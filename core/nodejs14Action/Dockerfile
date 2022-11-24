@@ -69,9 +69,6 @@ RUN curl -L ${DEPLOYER_DOWNLOAD} | tar xzf - \
   && rm -fr /usr/local/lib/dosls && mv dosls /usr/local/lib \
   && rm -f /usr/local/bin/dosls && ln -s /usr/local/lib/dosls/bootstrap /usr/local/bin/dosls
 
-ARG __OW_LAMBDA_COMPAT
-ENV __OW_LAMBDA_COMPAT=$__OW_LAMBDA_COMPAT
-
 COPY --from=builder_source /bin/proxy /bin/proxy_source
 COPY --from=builder_release /bin/proxy /bin/proxy_release
 RUN mv /bin/proxy_${GO_PROXY_BUILD_FROM} /bin/proxy

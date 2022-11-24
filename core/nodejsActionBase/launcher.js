@@ -29,8 +29,6 @@ try {
     } catch (e) {}
   })();
 
-  const lambdaCompat = process.env.__OW_LAMBDA_COMPAT === undefined ? false : process.env.__OW_LAMBDA_COMPAT.toLowerCase() === 'true' && NodeActionLambdaRunner !== undefined;
-
   const handler = eval('require("./##MAIN_FILE##").##MAIN_FUNC##') // Will be replaced in the compile script with the correct main.
 
   const runner = !isLambda(handler) ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
