@@ -39,9 +39,6 @@ RUN cd / && npm install --no-package-lock --production \
 # move nim sdk to node modules directory so that it can be found by node module loader
 RUN mkdir /node_modules/nim && mv /nodejsAction/nim.js /node_modules/nim/index.js
 
-ARG __LAMBDA_COMPAT
-ENV __LAMBDA_COMPAT=$__LAMBDA_COMPAT
-
 EXPOSE 8080
 
 WORKDIR /nodejsAction
