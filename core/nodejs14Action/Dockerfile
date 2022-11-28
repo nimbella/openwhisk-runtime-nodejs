@@ -62,18 +62,12 @@ RUN cd / \
 # enable faster builds after only sources change.
 COPY  . /nodejsAction/
 
-# move nim sdk to node modules directory so that it can be found by node module loader
-RUN mkdir /node_modules/nim && mv /nodejsAction/nim.js /node_modules/nim/index.js
-
-# install the functions-deployer (co-exist with nim temporarily)
+# install the functions-deployer
 ARG DEPLOYER_DOWNLOAD
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -L ${DEPLOYER_DOWNLOAD} | tar xzf - \
   && rm -fr /usr/local/lib/dosls && mv dosls /usr/local/lib \
   && rm -f /usr/local/bin/dosls && ln -s /usr/local/lib/dosls/bootstrap /usr/local/bin/dosls
-
-ARG __OW_LAMBDA_COMPAT
-ENV __OW_LAMBDA_COMPAT=$__OW_LAMBDA_COMPAT
 
 COPY --from=builder_source /bin/proxy /bin/proxy_source
 COPY --from=builder_release /bin/proxy /bin/proxy_release

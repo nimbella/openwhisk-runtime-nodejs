@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+const isLambda = require('./mainFunctionDetection').isLambda;
+
 try {
   const readline = require('readline');
   const fs = require("fs")
@@ -29,8 +31,11 @@ try {
     } catch (e) {}
   })();
 
-  const lambdaCompat = process.env.__OW_LAMBDA_COMPAT === undefined ? false : process.env.__OW_LAMBDA_COMPAT.toLowerCase() === 'true' && NodeActionLambdaRunner !== undefined;
-
+  /**
+   * Initializes the user's function. Expected to be called with first line from ActionLoop input.
+   * @param {{ env: Object }} message
+   * @returns {NodeActionRunner | NodeActionLambdaRunner} The runner to use with the function.
+   */
   function doInit(message) {
     if (message.env && typeof message.env == 'object') {
       Object.keys(message.env).forEach(k => {
@@ -43,9 +48,11 @@ try {
       });
     }
 
+    // initializeActionHandler has the logic for determining whether the function was in a ZIP file or not and if so,
+    // unpacking it. It will only ever return the main function (aka handler).
     return initializeActionHandler(message)
       .then(handler => {
-        return lambdaCompat === false ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
+        return !isLambda(handler) ? new NodeActionRunner(handler) : new NodeActionLambdaRunner(handler);
       });
   }
 
