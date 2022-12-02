@@ -24,6 +24,7 @@ import actionContainers.{ActionContainer, BasicActionRunnerTests, ResourceHelper
 import actionContainers.ActionContainer.withContainer
 import actionContainers.ResourceHelpers.ZipBuilder
 import spray.json._
+import spray.json.DefaultJsonProtocol._
 
 abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with WskActorSystem {
 
@@ -1048,5 +1049,38 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
         o shouldBe empty
         e shouldBe empty
     })
+  }
+
+  Map(
+    "prelaunched" -> Map.empty[String, String],
+    "non-prelaunched" -> Map("OW_INIT_IN_ACTIONLOOP" -> "")
+  ).foreach { case (name, env) =>
+    it should s"support a function with Lambda signature exported via CommonJS ($name)" in {
+      val (out, err) = withActionContainer(env) { c =>
+        val code =
+          """
+            | module.exports.main = async function (event, context) {
+            |     return {
+            |       event,
+            |       contextKeys: Object.keys(context),
+            |     };
+            | }
+          """.stripMargin
+
+        val (initCode, _) = c.init(initPayload(code))
+        initCode should be(200)
+
+        val (runCode, out) = c.run(runPayload(
+          JsObject(
+            "__ow_headers" -> "x".toJson,
+            "__ow_method" -> "get".toJson,
+            "__ow_path" -> "y".toJson)
+        ))
+        runCode should be(200)
+
+        out.get.fields("contextKeys").convertTo[List[String]] should contain theSameElementsAs List("callbackWaitsForEmptyEventLoop", "done", "succeed", "fail", "getRemainingTimeInMillis")
+        out.get.fields("event") shouldBe JsObject("headers" -> "x".toJson, "httpMethod" -> "GET".toJson, "method" -> "get".toJson, "path" -> "y".toJson)
+      }
+    }
   }
 }
