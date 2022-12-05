@@ -23,7 +23,11 @@
 const fs = require('fs');
 const path = require('path');
 
-/** Initializes the handler for the user function. */
+/**
+ * Initializes the handler for the user function.
+ * @param {Object} message
+ * @returns {Promise<Function>}
+ */
 function initializeActionHandler(message) {
     if (message.binary) {
         // The code is a base64-encoded zip file.
@@ -79,6 +83,13 @@ function initializeActionHandler(message) {
     } else {
         return new Promise((resolve) => {
             // Throws on error and rejects the promise as a consequence.
+            // In the eval below, ${message.code} will template in the user's code. ${message.main} will template in the
+            // name of the main function. So the code ends up being evaluated, which has the effect of declaring a
+            // function, and then that function is returned. If an error is thrown
+            // while trying to return the function using the current scope, and the error is ReferenceError, we assume
+            // that the user provided code by exporting a module instead of putting a function at the top level of their
+            // file, and we return what they exported instead.
+            // Either way, the result of eval will be the user's main function, as a function (not as a string etc.).
             let handler = eval(
                 `(function(){
                     ${message.code}
