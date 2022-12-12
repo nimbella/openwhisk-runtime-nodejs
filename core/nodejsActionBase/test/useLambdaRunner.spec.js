@@ -27,15 +27,15 @@ describe('useLambdaRunner()', function () {
         expect(useLambdaRunner(fn)).to.equal(false);
     });
 
-    it(`returns true when env var ${envVarName} is not set and it is given a function with two parameters`, function () {
+    it(`returns false when env var ${envVarName} is not set and it is given a function with two parameters`, function () {
         const fn = function(a, b) {};
 
-        expect(useLambdaRunner(fn)).to.equal(true);
+        expect(useLambdaRunner(fn)).to.equal(false);
     });
 
-    it(`returns true when env var ${envVarName} and it is given a function with three parameters`, function () {
+    it(`returns false when env var ${envVarName} and it is given a function with three parameters`, function () {
         const fn = function(a, b, c) {};
 
-        expect(useLambdaRunner(fn)).to.equal(true);
+        expect(useLambdaRunner(fn)).to.equal(false);
     });
 });
