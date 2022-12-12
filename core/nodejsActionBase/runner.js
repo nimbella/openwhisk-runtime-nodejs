@@ -120,9 +120,24 @@ class NodeActionRunner {
     }
 
     run(args) {
+        let deadline = Number(process.env['__OW_DEADLINE']);
+        let context = {
+            functionName: process.env['__OW_ACTION_NAME'],
+            functionVersion: process.env['__OW_ACTION_VERSION'],
+            activationId: process.env['__OW_ACTIVATION_ID'],
+            requestId: process.env['__OW_TRANSACTION_ID'],
+            deadline: deadline,
+            apiHost: process.env['__OW_API_HOST'],
+            apiKey: process.env['__OW_API_KEY'] || '',
+            namespace: process.env['__OW_NAMESPACE'],
+            getRemainingTimeInMillis: function() {
+                return deadline - new Date().getTime();
+            }
+        }
+
         return new Promise((resolve, reject) => {
             try {
-                var result = this.userScriptMain(args);
+                var result = this.userScriptMain(args, context);
             } catch (e) {
                 reject(e);
             }

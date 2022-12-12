@@ -18,6 +18,7 @@
 package runtime.actionContainers
 
 import java.io.File
+import java.time.Instant
 
 import common.WskActorSystem
 import actionContainers.{ActionContainer, BasicActionRunnerTests, ResourceHelpers}
@@ -1053,17 +1054,23 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
 
   Map(
     "prelaunched" -> Map.empty[String, String],
-    "non-prelaunched" -> Map("OW_INIT_IN_ACTIONLOOP" -> "")
+    "non-prelaunched" -> Map("OW_INIT_IN_ACTIONLOOP" -> ""),
   ).foreach { case (name, env) =>
-    it should s"support a function with Lambda signature exported via CommonJS ($name)" in {
-      val (out, err) = withActionContainer(env) { c =>
+    it should s"support a function with a lambda-like signature $name" in {
+      val (out, err) = withActionContainer(env + ("__OW_API_HOST" -> "testhost")) { c =>
         val code =
           """
-            | module.exports.main = async function (event, context) {
+            | function main(event, context) {
             |     return {
-            |       event,
-            |       contextKeys: Object.keys(context),
-            |     };
+            |         "remaining_time": context.getRemainingTimeInMillis(),
+            |         "activation_id": context.activationId,
+            |         "request_id": context.requestId,
+            |         "function_name": context.functionName,
+            |         "function_version": context.functionVersion,
+            |         "api_host": context.apiHost,
+            |         "api_key": context.apiKey,
+            |         "namespace": context.namespace
+            |     }
             | }
           """.stripMargin
 
@@ -1071,15 +1078,31 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
         initCode should be(200)
 
         val (runCode, out) = c.run(runPayload(
-          JsObject(
-            "__ow_headers" -> "x".toJson,
-            "__ow_method" -> "get".toJson,
-            "__ow_path" -> "y".toJson)
+          JsObject(),
+          Some(JsObject(
+            "deadline" -> Instant.now.plusSeconds(10).toEpochMilli.toString.toJson,
+            "activation_id" -> "testaid".toJson,
+            "transaction_id" -> "testtid".toJson,
+            "action_name" -> "testfunction".toJson,
+            "action_version" -> "0.0.1".toJson,
+            "namespace" -> "testnamespace".toJson,
+            "api_key" -> "testkey".toJson
+          ))
         ))
         runCode should be(200)
 
-        out.get.fields("contextKeys").convertTo[List[String]] should contain theSameElementsAs List("callbackWaitsForEmptyEventLoop", "done", "succeed", "fail", "getRemainingTimeInMillis")
-        out.get.fields("event") shouldBe JsObject("headers" -> "x".toJson, "httpMethod" -> "GET".toJson, "method" -> "get".toJson, "path" -> "y".toJson)
+        val remainingTime = out.get.fields("remaining_time").convertTo[Int]
+        remainingTime should be > 9500 // We give the test 500ms of slack to invoke the function to avoid flakes.
+        out shouldBe Some(JsObject(
+          "remaining_time" -> remainingTime.toJson,
+          "activation_id" -> "testaid".toJson,
+          "request_id" -> "testtid".toJson,
+          "function_name" -> "testfunction".toJson,
+          "function_version" -> "0.0.1".toJson,
+          "api_host" -> "testhost".toJson,
+          "api_key" -> "testkey".toJson,
+          "namespace" -> "testnamespace".toJson
+        ))
       }
     }
   }
