@@ -58,7 +58,7 @@ def sources(launcher, source_dir, main):
         parts = main.split(".", 1)
         if len(parts) == 1:
             if not os.path.isfile("%s/index.js" % source_dir) and not os.path.isfile("%s/index.mjs" % source_dir) and not os.path.isfile("%s/package.json" % source_dir):
-                print("Zipped actions must contain either package.json or index.[m]js at the root.")
+                print("Zipped functions must contain either package.json or index.[m]js at the root.")
                 sys.exit(1)
 
             main_file = ""

@@ -50,7 +50,7 @@ function initializeActionHandler(message) {
                 const indexJSExists = fs.existsSync('index.js')
                 const indexMJSExists = fs.existsSync('index.mjs')
                 if (index === undefined && !packageJsonExists && !indexJSExists && !indexMJSExists) {
-                    return Promise.reject('Zipped actions must contain either package.json or index.[m]js at the root.');
+                    return Promise.reject('Zipped functions must contain either package.json or index.[m]js at the root.');
                 }
 
                 let mainFile
@@ -183,14 +183,14 @@ function unzipInTmpDir(zipFileContents) {
             const zipFile = path.join(tmpDir, "action.zip");
             fs.writeFile(zipFile, zipFileContents, "base64", err => {
                 if (!err) resolve(zipFile);
-                else reject("There was an error reading the action archive.");
+                else reject("There was an error reading the function archive.");
             });
         });
     }).then(zipFile => {
         return exec(mkTempCmd).then(tmpDir => {
             return exec("unzip -qq " + zipFile + " -d " + tmpDir)
                 .then(res => path.resolve(tmpDir))
-                .catch(error => Promise.reject("There was an error uncompressing the action archive."));
+                .catch(error => Promise.reject("There was an error uncompressing the function archive."));
         });
     });
 }
@@ -228,7 +228,7 @@ function assertMainIsFunction(handler, name) {
     if (typeof handler === 'function') {
         return Promise.resolve(handler);
     } else {
-        return Promise.reject("Action entrypoint '" + name + "' is not a function.");
+        return Promise.reject("Function entrypoint '" + name + "' is not a function.");
     }
 }
 
