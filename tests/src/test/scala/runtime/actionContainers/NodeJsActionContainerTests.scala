@@ -749,7 +749,7 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
 
     checkStreams(out, err, {
       case (o, e) =>
-        (o + e).toLowerCase should include("zipped actions must contain either package.json or index.[m]js at the root.")
+        (o + e).toLowerCase should include("zipped functions must contain either package.json or index.[m]js at the root.")
     })
   }
 
