@@ -53,6 +53,9 @@ COPY package.json /
 # Customize runtime with additional packages.
 # Install package globally so user packages can override.
 RUN cd / \
+  # Pinning npm to version 8 as 9 has known issues around UID.
+  # See https://github.com/npm/cli/issues/5889 for example.
+  && npm i -g npm@8 \
   && npm install --no-package-lock --omit=dev \
   && npm cache clean --force
 
