@@ -34,7 +34,7 @@ RUN curl -sL \
     && cd openwhisk-runtime-go-*/main\
     && GO111MODULE=on go build -o /bin/proxy
 
-FROM node:14-stretch
+FROM node:14-bullseye
 
 # select the builder to use
 ARG GO_PROXY_BUILD_FROM=source
