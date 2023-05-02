@@ -40,12 +40,15 @@ FROM node:14-stretch
 ARG GO_PROXY_BUILD_FROM=source
 
 # Initial update and some basics.
-#
-RUN apt-get update && apt-get install -y \
-    imagemagick \
-    graphicsmagick \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+# Replace debian sources with debian archive since stretch has been pulled from the main repos.
+RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list \
+  && sed -i 's|security.debian.org|archive.debian.org/|g' /etc/apt/sources.list \
+  && sed -i '/stretch-updates/d' /etc/apt/sources.list \
+  && apt-get update && apt-get install -y \
+  imagemagick \
+  graphicsmagick \
+  unzip \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy the package.json to root container,
 # so npm packages from user functions take precendence.
