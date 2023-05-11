@@ -18,11 +18,10 @@
  */
 
 const useLambdaRunner = require('/nodejsAction/useLambdaRunner');
+const readline = require('readline');
+const fs = require("fs")
 
 try {
-  const readline = require('readline');
-  const fs = require("fs")
-
   const { NodeActionRunner, initializeActionHandler } = require('/nodejsAction/runner');
   const NodeActionLambdaRunner = (() => {
     try {
@@ -106,7 +105,11 @@ try {
   process.exit(1)
 }
 
+// Create explicit stdout and stderr streams for the sentinels to avoid users tampering with the output.
+const stdout = fs.createWriteStream(null, {fd: 1, encoding: "utf8"})
+const stderr = fs.createWriteStream(null, {fd: 2, encoding: "utf8"})
+
 function writeMarkers() {
-  console.log('XXX_THE_END_OF_A_WHISK_ACTIVATION_XXX');
-  console.error('XXX_THE_END_OF_A_WHISK_ACTIVATION_XXX');
+  stdout.write('XXX_THE_END_OF_A_WHISK_ACTIVATION_XXX\n');
+  stderr.write('XXX_THE_END_OF_A_WHISK_ACTIVATION_XXX\n');
 }

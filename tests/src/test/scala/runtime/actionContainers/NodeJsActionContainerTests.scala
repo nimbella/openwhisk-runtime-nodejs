@@ -928,6 +928,33 @@ abstract class NodeJsActionContainerTests extends BasicActionRunnerTests with Ws
     }
   }
 
+  it should "allow the user to tamper with console functions" in {
+    assume(!isTypeScript)
+    val (out, err) = withNodeJsContainer { c =>
+      val code = """
+                   | function main() {
+                   |   const baseLog = console.log
+                   |   console.log = function(arg) {
+                   |     baseLog("foo " + arg)
+                   |   }
+                   | }
+                 """.stripMargin;
+
+      val (initCode, _) = c.init(initPayload(code))
+      initCode should be(200)
+
+      val (runCode, runRes) = c.run(runPayload(JsObject()))
+      runCode should be(200)
+
+      runRes shouldBe defined
+    }
+    checkStreams(out, err, {
+      case (o, e) =>
+        o shouldBe empty
+        e shouldBe empty
+    })
+  }
+
   it should "have openwhisk package available through an ES module import" in {
     val (out, err) = withNodeJsContainer { c =>
       val code =
