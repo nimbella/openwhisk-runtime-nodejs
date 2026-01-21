@@ -29,6 +29,8 @@ The following Node.js runtime versions (with kind & image labels) are generated 
 - Node.js 10.23.0 (`nodejs:10` &  `openwhisk/action-nodejs-v10`)
 - Node.js 12.19.1 (`nodejs:12` & `openwhisk/action-nodejs-v12`)
 - Node.js 14.15.1 (`nodejs:14` & `openwhisk/action-nodejs-v14`)
+- Node.js 18.x (`nodejs:18` & `openwhisk/action-nodejs-v18`)
+- Node.js 22.x (`nodejs:22` & `openwhisk/action-nodejs-v22`)
 
 This README documents the build, customisation and testing of these runtime images.
 
@@ -56,6 +58,18 @@ wsk action update myAction myAction.js --kind nodejs:12
 wsk action update myAction myAction.js --kind nodejs:14
 ```
 
+### Node.js v18
+
+```
+wsk action update myAction myAction.js --kind nodejs:18
+```
+
+### Node.js v22
+
+```
+wsk action update myAction myAction.js --kind nodejs:22
+```
+
 ## Images
 
 All the runtime images are published by the project to Docker Hub @ [https://hub.docker.com/u/openwhisk](https://hub.docker.com/u/openwhisk)
@@ -63,6 +77,8 @@ All the runtime images are published by the project to Docker Hub @ [https://hub
 - [https://hub.docker.com/r/openwhisk/action-nodejs-v10](https://hub.docker.com/r/openwhisk/action-nodejs-v10)
 - [https://hub.docker.com/r/openwhisk/action-nodejs-v12](https://hub.docker.com/r/openwhisk/action-nodejs-v12)
 - [https://hub.docker.com/r/openwhisk/action-nodejs-v14](https://hub.docker.com/r/openwhisk/action-nodejs-v14)
+- [https://hub.docker.com/r/openwhisk/action-nodejs-v18](https://hub.docker.com/r/openwhisk/action-nodejs-v18)
+- [https://hub.docker.com/r/openwhisk/action-nodejs-v22](https://hub.docker.com/r/openwhisk/action-nodejs-v22)
 
 These images can be used to execute Node.js actions on any deployment of Apache OpenWhisk, even those without those images defined the in runtime manifest, using the `--docker` action parameter.
 
@@ -92,9 +108,11 @@ The `core/nodejsActionBase` folder contains the Node.js app server used to imple
 ./gradlew core:nodejs10Action:distDocker
 ./gradlew core:nodejs12Action:distDocker
 ./gradlew core:nodejs14Action:distDocker
+./gradlew core:nodejs18Action:distDocker
+./gradlew core:nodejs22Action:distDocker
 ```
 
-This will return the following runtime images with the following names: `action-nodejs-v10`, `action-nodejs-v12` and `action-nodejs-v14`.
+This will return the following runtime images with the following names: `action-nodejs-v10`, `action-nodejs-v12`, `action-nodejs-v14`, `action-nodejs-v18` and `action-nodejs-v22`.
 
 ### Testing
 
@@ -113,6 +131,7 @@ This will return the following runtime images with the following names: `action-
 ./gradlew tests:dat:docker:nodejs10docker:distDocker
 ./gradlew tests:dat:docker:nodejs12docker:distDocker
 ./gradlew tests:dat:docker:nodejs14docker:distDocker
+./gradlew tests:dat:docker:nodejs22docker:distDocker
 ```
 
 - Run the project tests.
