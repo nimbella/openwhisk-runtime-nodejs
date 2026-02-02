@@ -36,7 +36,7 @@ RUN apt-get update \
     ca-certificates \
     # For the proxy.
     unzip \
-    python3 \
+    python \
     # For function-deployer install
     curl \
     # Dependencies for the users.
