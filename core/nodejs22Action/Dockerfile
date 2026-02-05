@@ -36,14 +36,15 @@ RUN apt-get update \
     ca-certificates \
     # For the proxy.
     unzip \
-    python \
+    python3 \
     # For function-deployer install
     curl \
     # Dependencies for the users.
     graphicsmagick \
     imagemagick \
   && update-ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && ln -sf /usr/bin/python3 /usr/bin/python
 
 # Copy the package.json to root container,
 # so npm packages from user functions take precendence.
