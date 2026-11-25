@@ -30,7 +30,7 @@ FROM node:22-bookworm-slim
 # Initial update and some basics.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-    # For npm to work properly.
+    # For npm to work properly
     git \
     ssh \
     ca-certificates \
